@@ -1,0 +1,12 @@
+{
+  "name": "protech-email",
+  "private": true,
+  "scripts": {
+    "dev:frontend": "cd apps/frontend && pnpm dev",
+    "dev:backend": "cd apps/backend && pnpm dev",
+    "build": "echo 'Use individual app build commands'"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0"
+  }
+}
