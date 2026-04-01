@@ -1,0 +1,7 @@
+# Flat File Authentication
+# Format: user@domain.com:password_hash
+
+# For testing (use proper hashing in production)
+[users]
+info@protechplanner.com:password123
+admin@protechplanner.com:admin123

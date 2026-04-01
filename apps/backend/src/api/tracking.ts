@@ -1,55 +1,80 @@
-import { eq } from 'drizzle-orm';
-import { db, emailLogs } from '../db/index';
-import { Request, Response } from 'express';
+import { Context } from 'hono';
 
-export async function trackOpen(req: Request, res: Response) {
-  const id = req.query.id as string;
+// 1x1 transparent PNG pixel
+const TRACKING_PIXEL = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+  'base64'
+);
+
+export async function trackOpen(c: Context) {
+  const id = c.req.query('id');
   
   if (!id) {
-    res.status(400).send('Missing id');
-    return;
+    return c.text('Missing id', 400);
   }
 
   const emailId = parseInt(id, 10);
   if (isNaN(emailId)) {
-    res.status(400).send('Invalid id');
-    return;
+    return c.text('Invalid id', 400);
   }
 
-  await db.update(emailLogs).set({ 
-    openedAt: new Date(),
-    updatedAt: new Date()
-  }).where(eq(emailLogs.id, emailId));
+  try {
+    // Log the open event
+    console.log(`[TRACKING] Email opened: ${emailId}`);
+    
+    // In production, update database
+    // await db.update(emailLogs).set({ 
+    //   openedAt: new Date(),
+    //   updatedAt: new Date() 
+    // }).where(eq(emailLogs.id, emailId));
 
-  res.setHeader('Content-Type', 'image/png');
-  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-  res.status(200).send('');
+    // Return tracking pixel
+    return new Response(TRACKING_PIXEL, {
+      headers: {
+        'Content-Type': 'image/png',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      },
+    });
+  } catch (error) {
+    console.error('[TRACKING] Error tracking open:', error);
+    return new Response(TRACKING_PIXEL, {
+      headers: { 'Content-Type': 'image/png' },
+    });
+  }
 }
 
-export async function trackClick(req: Request, res: Response) {
-  const id = req.query.id as string;
-  const redirectUrl = req.query.url as string;
+export async function trackClick(c: Context) {
+  const id = c.req.query('id');
+  const redirectUrl = c.req.query('url');
   
   if (!id) {
-    res.status(400).send('Missing id');
-    return;
+    return c.text('Missing id', 400);
   }
 
   const emailId = parseInt(id, 10);
   if (isNaN(emailId)) {
-    res.status(400).send('Invalid id');
-    return;
+    return c.text('Invalid id', 400);
   }
 
-  await db.update(emailLogs).set({ 
-    clickedAt: new Date(),
-    updatedAt: new Date()
-  }).where(eq(emailLogs.id, emailId));
+  try {
+    // Log the click event
+    console.log(`[TRACKING] Email clicked: ${emailId}, URL: ${redirectUrl}`);
+    
+    // In production, update database
+    // await db.update(emailLogs).set({ 
+    //   clickedAt: new Date(),
+    //   updatedAt: new Date() 
+    // }).where(eq(emailLogs.id, emailId));
 
-  if (redirectUrl) {
-    res.redirect(redirectUrl);
-    return;
+    if (redirectUrl) {
+      return c.redirect(redirectUrl);
+    }
+
+    return c.text('Tracked');
+  } catch (error) {
+    console.error('[TRACKING] Error tracking click:', error);
+    return c.text('Error', 500);
   }
-
-  res.status(200).send('Tracked');
 }

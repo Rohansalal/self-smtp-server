@@ -1,22 +1,24 @@
 import { eq, and } from 'drizzle-orm';
 import { db, contacts, campaigns, campaignContacts, emailLogs, NewContact, NewCampaign, NewCampaignContact } from '../db/index';
 import { emailQueue } from '../queue/queue';
+import { EmailService as EmailSvc } from './email.service';
 
 interface CreateCampaignInput {
   name: string;
   subject: string;
-  htmlTemplate?: string;
-  textTemplate?: string;
-  fromName?: string;
-  userId?: number;
+  htmlTemplate?: string | null;
+  textTemplate?: string | null;
+  fromName?: string | null;
+  fromEmail?: string | null;
+  userId?: number | null;
 }
 
 interface AddContactInput {
   email: string;
-  firstName?: string;
-  lastName?: string;
-  company?: string;
-  tags?: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  company?: string | null;
+  tags?: string | null;
 }
 
 export class CampaignService {
@@ -24,11 +26,14 @@ export class CampaignService {
     const [campaign] = await db.insert(campaigns).values({
       name: data.name,
       subject: data.subject,
-      htmlTemplate: data.htmlTemplate,
-      textTemplate: data.textTemplate,
+      htmlTemplate: data.htmlTemplate ?? null,
+      textTemplate: data.textTemplate ?? null,
       fromName: data.fromName || 'Protechplanner',
-      userId: data.userId,
+      fromEmail: data.fromEmail || 'info@protechplanner.com',
+      userId: data.userId ?? null,
       status: 'draft',
+      createdAt: new Date(),
+      updatedAt: new Date(),
     }).returning();
     return campaign;
   }
@@ -66,21 +71,24 @@ export class CampaignService {
       } else {
         const [saved] = await db.insert(contacts).values({
           email: contact.email,
-          firstName: contact.firstName,
-          lastName: contact.lastName,
-          company: contact.company,
-          tags: contact.tags,
+          firstName: contact.firstName ?? null,
+          lastName: contact.lastName ?? null,
+          company: contact.company ?? null,
+          tags: contact.tags ?? null,
           status: 'active',
+          createdAt: new Date(),
+          updatedAt: new Date(),
         }).returning();
         contactId = saved.id;
         savedContacts.push(saved);
       }
 
-      const [campaignContact] = await db.insert(campaignContacts).values({
+      await db.insert(campaignContacts).values({
         campaignId,
         contactId,
         status: 'pending',
-      }).returning();
+        createdAt: new Date(),
+      });
 
       await db.update(campaigns).set({ 
         totalRecipients: await this.getContactCount(campaignId),
@@ -102,10 +110,12 @@ export class CampaignService {
     
     if (contactIds.length === 0) return [];
     
-    return db.select().from(contacts).where(
-      // @ts-expect-error - dynamic where
-      contacts.id.in(contactIds)
-    );
+    const allContacts = [];
+    for (const id of contactIds) {
+      const [contact] = await db.select().from(contacts).where(eq(contacts.id, id)).limit(1);
+      if (contact) allContacts.push(contact);
+    }
+    return allContacts;
   }
 
   static async start(campaignId: number) {
@@ -124,23 +134,12 @@ export class CampaignService {
       const contact = await db.select().from(contacts).where(eq(contacts.id, cc.contactId)).limit(1);
       
       if (contact.length > 0 && contact[0].email) {
-        const [log] = await db.insert(emailLogs).values({
-          toEmail: contact[0].email,
-          fromEmail: 'info@protechplanner.com',
-          subject: campaign.subject,
-          html: campaign.htmlTemplate,
-          text: campaign.textTemplate,
-          campaignId,
-          contactId: contact[0].id,
-          status: 'queued',
-        }).returning();
-
-        await emailQueue.add('send-email', {
-          id: log.id,
+        await EmailSvc.send({
           to: contact[0].email,
           subject: campaign.subject,
-          html: campaign.htmlTemplate,
-          text: campaign.textTemplate,
+          html: campaign.htmlTemplate ?? undefined,
+          text: campaign.textTemplate ?? undefined,
+          from: campaign.fromEmail || 'info@protechplanner.com',
           campaignId,
           contactId: contact[0].id,
         });
@@ -151,7 +150,7 @@ export class CampaignService {
   }
 
   static async updateStatus(campaignId: number, status: string) {
-    const updateData: Record<string, unknown> = { 
+    const updateData: Record<string, any> = { 
       status, 
       updatedAt: new Date() 
     };
@@ -199,11 +198,13 @@ export class ContactService {
   static async create(data: AddContactInput) {
     const [contact] = await db.insert(contacts).values({
       email: data.email,
-      firstName: data.firstName,
-      lastName: data.lastName,
-      company: data.company,
-      tags: data.tags,
+      firstName: data.firstName ?? null,
+      lastName: data.lastName ?? null,
+      company: data.company ?? null,
+      tags: data.tags ?? null,
       status: 'active',
+      createdAt: new Date(),
+      updatedAt: new Date(),
     }).returning();
     return contact;
   }
@@ -211,11 +212,13 @@ export class ContactService {
   static async createBulk(data: AddContactInput[]) {
     const values = data.map(c => ({
       email: c.email,
-      firstName: c.firstName,
-      lastName: c.lastName,
-      company: c.company,
-      tags: c.tags,
+      firstName: c.firstName ?? null,
+      lastName: c.lastName ?? null,
+      company: c.company ?? null,
+      tags: c.tags ?? null,
       status: 'active' as const,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     }));
     return db.insert(contacts).values(values).returning();
   }
@@ -246,86 +249,21 @@ export class ContactService {
 
   static async importFromCSV(csvData: string) {
     const lines = csvData.split('\n').filter(line => line.trim());
-    const contacts: AddContactInput[] = [];
+    const contactsList: AddContactInput[] = [];
 
     for (let i = 1; i < lines.length; i++) {
       const parts = lines[i].split(',').map(p => p.trim());
       if (parts[0]) {
-        contacts.push({
+        contactsList.push({
           email: parts[0],
-          firstName: parts[1] || '',
-          lastName: parts[2] || '',
-          company: parts[3] || '',
-          tags: parts[4] || '',
+          firstName: parts[1] || undefined,
+          lastName: parts[2] || undefined,
+          company: parts[3] || undefined,
+          tags: parts[4] || undefined,
         });
       }
     }
 
-    return this.createBulk(contacts);
-  }
-}
-
-export class EmailService {
-  static async logEmail(data: {
-    to: string;
-    subject: string;
-    html?: string;
-    text?: string;
-    campaignId?: number;
-    contactId?: number;
-  }) {
-    const [log] = await db.insert(emailLogs).values({
-      toEmail: data.to,
-      subject: data.subject,
-      html: data.html,
-      text: data.text,
-      campaignId: data.campaignId,
-      contactId: data.contactId,
-      status: 'queued',
-    }).returning();
-    return log;
-  }
-
-  static async getStatus(id: number) {
-    const [log] = await db.select().from(emailLogs).where(eq(emailLogs.id, id));
-    return log;
-  }
-
-  static async list(campaignId?: number, limit = 50, offset = 0) {
-    if (campaignId) {
-      return db.select().from(emailLogs).where(eq(emailLogs.campaignId, campaignId)).limit(limit).offset(offset);
-    }
-    return db.select().from(emailLogs).orderBy(emailLogs.createdAt).limit(limit).offset(offset);
-  }
-
-  static async trackOpen(id: number) {
-    await db.update(emailLogs).set({ 
-      openedAt: new Date(),
-      updatedAt: new Date()
-    }).where(eq(emailLogs.id, id));
-    
-    const log = await this.getStatus(id);
-    if (log?.contactId) {
-      await db.update(contacts).set({ 
-        openCount: (await this.get(log.contactId))?.openCount || 0 + 1,
-        updatedAt: new Date()
-      }).where(eq(contacts.id, log.contactId));
-    }
-  }
-
-  static async trackClick(id: number) {
-    await db.update(emailLogs).set({ 
-      clickedAt: new Date(),
-      updatedAt: new Date()
-    }).where(eq(emailLogs.id, id));
-
-    const log = await this.getStatus(id);
-    if (log?.contactId) {
-      const contact = await ContactService.get(log.contactId);
-      await db.update(contacts).set({ 
-        clickCount: (contact?.clickCount || 0) + 1,
-        updatedAt: new Date()
-      }).where(eq(contacts.id, log.contactId));
-    }
+    return this.createBulk(contactsList);
   }
 }

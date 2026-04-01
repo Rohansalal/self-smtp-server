@@ -1,0 +1,53 @@
+name = "protechplanner-email-api"
+main = "src/server.ts"
+compatibility_date = "2024-05-01"
+
+# Routes for the worker
+routes = [
+  { pattern = "api.protechplanner.com/*", zone_name = "protechplanner.com" }
+]
+
+# Environment variables
+[vars]
+ENVIRONMENT = "production"
+DOMAIN = "protechplanner.com"
+EMAIL_DEFAULT_FROM = "info@protechplanner.com"
+
+# KV Namespace for session/storage (optional)
+# [[kv_namespaces]]
+# binding = "EMAIL_CACHE"
+# id = "your-kv-namespace-id"
+
+# D1 Database for email storage (Cloudflare's SQLite)
+[[d1_databases]]
+binding = "DB"
+database_name = "protechplanner-emails"
+database_id = "your-d1-database-id"
+
+# R2 Bucket for attachments (optional)
+# [[r2_buckets]]
+# binding = "ATTACHMENTS"
+# bucket_name = "protechplanner-attachments"
+
+# Queue producer
+[[queues.producers]]
+binding = "EMAIL_QUEUE"
+queue_name = "email-outbound"
+
+# Queue consumer
+[[queues.consumers]]
+queue_name = "email-outbound"
+max_batch_size = 10
+max_batch_timeout = 30
+max_retries = 3
+
+# Compatibility flags
+[compatibility_flags]
+nodejs_compat = true
+
+# Build configuration
+[build]
+command = "npm run build"
+
+[build.upload]
+format = "modules"

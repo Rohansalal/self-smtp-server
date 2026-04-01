@@ -7,6 +7,8 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    networks:
+      - email-network
 
   backend:
     build:
@@ -23,8 +25,15 @@ services:
       - EMAIL_PASS=${EMAIL_PASS}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - HARAKA_SERVER=haraka
+      - HARAKA_PORT=25
+      - BACKEND_URL=http://backend:3000
+      - WEBHOOK_SECRET=${WEBHOOK_SECRET:-}
     depends_on:
       - redis
+      - haraka
+    networks:
+      - email-network
 
   worker:
     build:
@@ -33,14 +42,38 @@ services:
     command: node dist/worker.js
     environment:
       - NODE_ENV=production
-      - EMAIL_HOST=mail.protechplanner.com
+      - EMAIL_HOST=haraka
       - EMAIL_PORT=587
       - EMAIL_USER=info@protechplanner.com
       - EMAIL_PASS=${EMAIL_PASS}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - HARAKA_HOST=haraka
+      - HARAKA_PORT=25
     depends_on:
       - redis
+      - haraka
+    networks:
+      - email-network
+
+  haraka:
+    image: haraka/haraka:latest
+    container_name: haraka-smtp
+    ports:
+      - "25:25"
+      - "587:587"
+      - "465:465"
+    volumes:
+      - ./haraka/config:/opt/haraka/config
+      - ./haraka/plugins:/opt/haraka/plugins
+      - haraka_data:/opt/haraka
+    environment:
+      - HOSTNAME=mail.protechplanner.com
+      - HARAKA_PLUGIN_PATH=/opt/haraka/plugins
+    networks:
+      - email-network
+    depends_on:
+      - backend
 
   frontend:
     build:
@@ -50,6 +83,13 @@ services:
       - "5173:5173"
     depends_on:
       - backend
+    networks:
+      - email-network
 
 volumes:
   redis_data:
+  haraka_data:
+
+networks:
+  email-network:
+    driver: bridge

@@ -1,0 +1,19 @@
+# SMTP Forward Configuration
+# For testing with Gmail (development)
+# smtp.gmail.com:587 user@gmail.com:password
+
+# Production: Direct delivery (your own IP)
+# Use Haraka as primary SMTP server
+
+# For hybrid approach: Forward to SES/SendGrid
+# [protechplanner.com]
+# host=smtp.gmail.com
+# port=587
+# auth_user=your-email@gmail.com
+# auth_pass=your-password
+
+# Default fallback
+[default]
+host=localhost
+port=2525
+secure=false

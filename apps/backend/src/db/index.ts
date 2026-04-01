@@ -5,7 +5,15 @@ import * as schema from './schema';
 const sqlite = new Database('./data/emails.db');
 export const db = drizzle(sqlite, { schema });
 
-export const { contacts, campaigns, campaignContacts, emailLogs, trackingPixels } = schema;
+export const { 
+  contacts, 
+  campaigns, 
+  campaignContacts, 
+  emailLogs, 
+  inboundEmails,
+  trackingPixels 
+} = schema;
+
 export type Contact = typeof schema.contacts.$inferSelect;
 export type NewContact = typeof schema.contacts.$inferInsert;
 export type Campaign = typeof schema.campaigns.$inferSelect;
@@ -14,5 +22,7 @@ export type CampaignContact = typeof schema.campaignContacts.$inferSelect;
 export type NewCampaignContact = typeof schema.campaignContacts.$inferInsert;
 export type EmailLog = typeof schema.emailLogs.$inferSelect;
 export type NewEmailLog = typeof schema.emailLogs.$inferInsert;
+export type InboundEmail = typeof schema.inboundEmails.$inferSelect;
+export type NewInboundEmail = typeof schema.inboundEmails.$inferInsert;
 export type TrackingPixel = typeof schema.trackingPixels.$inferSelect;
 export type NewTrackingPixel = typeof schema.trackingPixels.$inferInsert;

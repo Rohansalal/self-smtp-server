@@ -1,0 +1,29 @@
+# Haraka Plugins Configuration
+# Enable plugins in order of execution
+
+# Core plugins
+tls
+auth/flat_file
+
+# SPF validation
+spf
+
+# DKIM signing
+dkim_sign
+
+# Queue configuration
+queue/smtp_forward
+
+# Anti-spam
+karma
+# Received validation
+headers
+# Connection handling
+limit
+# Mail filtering
+mail_from.is_resolvable
+# DNS validation
+dnsbl
+
+# Inbound processing
+queue/inbound_to_api

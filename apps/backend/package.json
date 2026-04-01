@@ -1,31 +1,33 @@
 {
   "name": "@protech/backend",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "main": "./src/index.ts",
   "scripts": {
     "dev": "tsx watch src/server.ts",
+    "dev:wrangler": "wrangler dev",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "deploy": "wrangler deploy"
   },
   "dependencies": {
-    "@protech/db": "file:../packages/db",
+    "@hono/node-server": "^1.13.0",
+    "@protech/db": "file:../../packages/db",
     "@trpc/server": "^10.45.0",
     "better-sqlite3": "^12.8.0",
     "bullmq": "^5.1.0",
-    "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "drizzle-orm": "^0.45.2",
-    "express": "^4.18.2",
+    "hono": "^4.6.0",
     "ioredis": "^5.3.2",
     "nodemailer": "^6.9.8",
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.17",
-    "@types/express": "^4.17.21",
+    "@cloudflare/workers-types": "^4.20240512.0",
     "@types/node": "^20.10.0",
     "@types/nodemailer": "^6.4.14",
     "tsx": "^4.7.0",
-    "typescript": "^5.3.0"
+    "typescript": "^5.3.0",
+    "wrangler": "^3.57.0"
   }
 }

@@ -4,6 +4,8 @@ import { Dashboard } from '../pages/dashboard/Dashboard';
 import { Campaigns } from '../pages/campaigns/Campaigns';
 import { CampaignDetail } from '../pages/campaigns/CampaignDetail';
 import { Contacts } from '../pages/contacts/Contacts';
+import { Inbox } from '../pages/inbox/Inbox';
+import { MailTransfer } from '../pages/mail/MailTransfer';
 
 export const router = createBrowserRouter([
   {
@@ -13,6 +15,10 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: <Dashboard />,
+      },
+      {
+        path: 'mail',
+        element: <MailTransfer />,
       },
       {
         path: 'campaigns',
@@ -30,6 +36,10 @@ export const router = createBrowserRouter([
       {
         path: 'contacts',
         element: <Contacts />,
+      },
+      {
+        path: 'inbox',
+        element: <Inbox />,
       },
     ],
   },

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { router, publicProcedure } from '../../trpc/trpc';
-import { CampaignService } from '../../services/campaign.service';
+import { CampaignService, ContactService } from '../../services/campaign.service';
 
 const contactSchema = z.object({
   email: z.string().email(),
@@ -14,31 +14,31 @@ export const contactRouter = router({
   create: publicProcedure
     .input(contactSchema)
     .mutation(async ({ input }) => {
-      return CampaignService.create(input);
+      return ContactService.create(input);
     }),
 
   createBulk: publicProcedure
     .input(z.array(contactSchema))
     .mutation(async ({ input }) => {
-      return CampaignService.createBulk(input);
+      return ContactService.createBulk(input);
     }),
 
   importCSV: publicProcedure
     .input(z.object({ csv: z.string() }))
     .mutation(async ({ input }) => {
-      return CampaignService.importFromCSV(input.csv);
+      return ContactService.importFromCSV(input.csv);
     }),
 
   get: publicProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ input }) => {
-      return CampaignService.get(input.id);
+      return ContactService.get(input.id);
     }),
 
   getByEmail: publicProcedure
     .input(z.object({ email: z.string().email() }))
     .query(async ({ input }) => {
-      return CampaignService.getByEmail(input.email);
+      return ContactService.getByEmail(input.email);
     }),
 
   list: publicProcedure
@@ -47,7 +47,7 @@ export const contactRouter = router({
       offset: z.number().min(0).default(0),
     }))
     .query(async ({ input }) => {
-      return CampaignService.list(input.limit, input.offset);
+      return ContactService.list(input.limit, input.offset);
     }),
 
   update: publicProcedure
@@ -56,12 +56,12 @@ export const contactRouter = router({
       data: contactSchema.partial(),
     }))
     .mutation(async ({ input }) => {
-      return CampaignService.update(input.id, input.data);
+      return ContactService.update(input.id, input.data);
     }),
 
   delete: publicProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ input }) => {
-      return CampaignService.delete(input.id);
+      return ContactService.delete(input.id);
     }),
 });

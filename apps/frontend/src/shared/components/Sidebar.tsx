@@ -1,9 +1,11 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Send, Users, Settings, Mail } from 'lucide-react';
+import { LayoutDashboard, Send, Users, Settings, Mail, Inbox, MailPlus } from 'lucide-react';
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/mail', icon: MailPlus, label: 'Mail Transfer' },
   { to: '/campaigns', icon: Send, label: 'Campaigns' },
+  { to: '/inbox', icon: Inbox, label: 'Inbox' },
   { to: '/contacts', icon: Users, label: 'Contacts' },
 ];
 

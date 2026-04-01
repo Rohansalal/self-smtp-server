@@ -1,0 +1,118 @@
+interface SendEmailInput {
+    to: string;
+    subject: string;
+    html?: string | null;
+    text?: string | null;
+    from?: string | null;
+    campaignId?: number | null;
+    contactId?: number | null;
+    replyTo?: string | null;
+    messageId?: string | null;
+}
+export declare class EmailService {
+    static send(data: SendEmailInput): Promise<{
+        id: number;
+        text: string;
+        status: string;
+        createdAt: Date;
+        updatedAt: Date;
+        subject: string;
+        fromEmail: string;
+        campaignId: number;
+        contactId: number;
+        sentAt: Date;
+        openedAt: Date;
+        clickedAt: Date;
+        toEmail: string;
+        html: string;
+        messageId: string;
+        inReplyTo: string;
+        errorMessage: string;
+        provider: string;
+    }>;
+    static sendBatch(emails: SendEmailInput[]): Promise<any[]>;
+    static processInbound(data: any): Promise<{
+        id: string;
+        status: string;
+        createdAt: Date;
+        updatedAt: Date;
+        subject: string;
+        fromEmail: string;
+        contactId: number;
+        toEmail: string;
+        html: string;
+        messageId: string;
+        inReplyTo: string;
+        body: string;
+        headers: string;
+        attachments: string;
+        references: string;
+        emailLogId: number;
+        processedAt: Date;
+        receivedAt: Date;
+    }>;
+    static getReplyCount(campaignId: number): Promise<number>;
+    static getStatus(id: number): Promise<{
+        id: number;
+        toEmail: string;
+        fromEmail: string;
+        subject: string;
+        html: string;
+        text: string;
+        campaignId: number;
+        contactId: number;
+        messageId: string;
+        inReplyTo: string;
+        status: string;
+        errorMessage: string;
+        provider: string;
+        sentAt: Date;
+        openedAt: Date;
+        clickedAt: Date;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
+    static list(campaignId?: number, limit?: number, offset?: number): Promise<{
+        id: number;
+        toEmail: string;
+        fromEmail: string;
+        subject: string;
+        html: string;
+        text: string;
+        campaignId: number;
+        contactId: number;
+        messageId: string;
+        inReplyTo: string;
+        status: string;
+        errorMessage: string;
+        provider: string;
+        sentAt: Date;
+        openedAt: Date;
+        clickedAt: Date;
+        createdAt: Date;
+        updatedAt: Date;
+    }[]>;
+    static listInbound(limit?: number, offset?: number): Promise<{
+        id: string;
+        fromEmail: string;
+        toEmail: string;
+        subject: string;
+        body: string;
+        html: string;
+        headers: string;
+        attachments: string;
+        messageId: string;
+        inReplyTo: string;
+        references: string;
+        contactId: number;
+        emailLogId: number;
+        status: string;
+        processedAt: Date;
+        receivedAt: Date;
+        createdAt: Date;
+        updatedAt: Date;
+    }[]>;
+    static verifyConnection(): Promise<boolean>;
+}
+export {};
+//# sourceMappingURL=email.service.d.ts.map
