@@ -1,0 +1,14 @@
+node_modules/
+packages/*/dist/
+apps/backend/dist/
+apps/backend/node_modules/
+apps/frontend/dist/
+apps/frontend/node_modules/
+*.tsbuildinfo
+dist/
+build/
+.env
+.env.local
+.DS_Store
+*.log
+pnpm-lock.yaml
